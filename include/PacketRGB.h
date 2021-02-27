@@ -5,14 +5,16 @@
 
 class PacketRGB : public Packet
 {
-private:
-  int red = 0;
-  int green = 0;
-  int blue = 0;
+public:
+  unsigned int red = 0;
+  unsigned int green = 0;
+  unsigned int blue = 0;
 
 public:
-  void encode(char *buffer) override;
-  void decode(char *buffer) override;
+  PacketRGB();
+  PacketRGB(char *incommingBuffer);
+  void encode() override;
+  void decode() override;
   void handle() override;
 };
 

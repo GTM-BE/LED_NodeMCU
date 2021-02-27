@@ -15,5 +15,8 @@ void UdpClient::tick()
       packetBuffer[length] = 0;
     }
     Serial.println(packetBuffer);
+    Packet pk = PacketFromBuffer(packetBuffer);
+    pk.decode();
+    pk.handle();
   }
 }

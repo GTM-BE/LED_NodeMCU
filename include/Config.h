@@ -1,12 +1,11 @@
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef CONFIG_H_
+#define CONFIG_H_
+#include <ESP8266WiFi.h>
 
 // LED
 #define LED_RED D1
 #define LED_GREEN D2
 #define LED_BLUE D3
-
-#define PACKET_SIZE 256
 
 // WIFI
 #define WIFI_SSID "FRITZ!Box Fon WLAN 7360"
@@ -16,7 +15,7 @@
 
 // AP
 #define AP_SSID "LED_WIFI_MCU"
-#define AP_PASSWORD "1234567890",
+#define AP_PASSWORD "1234567890"
 
 // Serial console
 #define BAUD_RATE 9200

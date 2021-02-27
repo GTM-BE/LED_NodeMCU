@@ -1,52 +1,96 @@
+#include <Arduino.h>
 #include "Packet.h"
 
-void Packet::writeInt(int value)
+Packet::Packet() {}
+
+Packet::Packet(char *incommingBuffer) {}
+
+void Packet::encode()
 {
-  buffer[offset] = (value & 0xFF); //extract first byte
-  offset++;
-  buffer[offset] = ((value >> 8) & 0xFF); //extract second byte
-  offset++;
-  buffer[offset] = ((value >> 16) & 0xFF); //extract third byte
-  offset++;
-  buffer[offset] = ((value >> 24) & 0xFF); //extract fourth byte
-  offset++;
+  Serial.println("Encode function not implemented");
 }
 
-int Packet::readInt()
+void Packet::decode()
 {
-  char bit1 = buffer[offset];
-  offset++;
-  char bit2 = buffer[offset];
-  offset++;
-  char bit3 = buffer[offset];
-  offset++;
-  char bit4 = buffer[offset];
-  offset++;
-  return (bit1 >> 24) + (bit2 >> 16) + (bit3 >> 8) + bit4;
+  Serial.println("Decode function not implemented");
 }
 
-void Packet::writeString(char value[])
+void Packet::handle()
 {
-  buffer[offset] = sizeof value;
+  Serial.println("Handle function not implemented");
+}
+
+void Packet::resetOffset()
+{
+  offset = 1;
+}
+
+void Packet::writeInt(unsigned int value)
+{
+  char byte1 = (value & 0xFF); //extract first byte
+  buffer[offset] = byte1;
   offset++;
-  for (unsigned int i = 0; i < sizeof value; i++)
+  char byte2 = ((value >> 8) & 0xFF); //extract second byte
+  buffer[offset] = byte2;
+  offset++;
+  char byte3 = ((value >> 16) & 0xFF); //extract third byte
+  buffer[offset] = byte3;
+  offset++;
+  char byte4 = ((value >> 24) & 0xFF); //extract fourth byte
+  buffer[offset] = byte4;
+  offset++;
+  // Serial.printf("Bit1: %d Bit2: %d Bit3: %d Bit4: %d\n", byte1, byte2, byte3, byte4);
+}
+
+unsigned int Packet::readInt()
+{
+  char byte1 = buffer[offset];
+  offset++;
+  char byte2 = buffer[offset];
+  offset++;
+  char byte3 = buffer[offset];
+  offset++;
+  char byte4 = buffer[offset];
+  offset++;
+  // Serial.printf("Bit1: %d Bit2: %d Bit3: %d Bit4: %d\n", byte1, byte2, byte3, byte4);
+  return (byte4 << 24) | (byte3 << 16) | (byte2 << 8) | byte1;
+}
+
+void Packet::writeLong(unsigned long value)
+{
+  unsigned int int1 = (value & 0xFFFFFFFF);
+  unsigned int int2 = ((value >> 24) & 0xFFFFFFFF);
+  writeInt(int1);
+  writeInt(int2);
+}
+
+unsigned long Packet::readLong()
+{
+  unsigned int int1 = readInt();
+  unsigned int int2 = readInt();
+  return ((int2 << 24) | int1);
+}
+
+void Packet::writeString(String value)
+{
+  writeInt(value.length());
+  for (unsigned int i = 0; i < value.length(); i++)
   {
-    buffer[offset] = value[i];
+    buffer[offset] = value.charAt(i);
     offset++;
   }
 }
 
-char *Packet::readString()
+String Packet::readString()
 {
-  char stringSize = buffer[offset];
-  char stringBuffer[stringSize];
-  offset++;
-  for (int i = 0; i < stringSize; i++)
+  unsigned int stringSize = readInt();
+  String stringBuf;
+  for (unsigned int i = 0; i < stringSize; i++)
   {
-    stringBuffer[i] = buffer[offset];
+    stringBuf += buffer[offset];
     offset++;
   }
-  return stringBuffer;
+  return stringBuf;
 }
 
 void Packet::writeBool(bool value)
@@ -62,7 +106,12 @@ bool Packet::readBool()
   return value;
 }
 
-void Packet::setOffset(int value)
+void Packet::writePacketID(PacketID id)
+{
+  buffer[0] = id;
+}
+
+void Packet::setOffset(unsigned int value)
 {
   offset = value;
 }

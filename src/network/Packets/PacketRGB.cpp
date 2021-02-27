@@ -1,16 +1,23 @@
 
 #include <Arduino.h>
 #include "PacketRGB.h"
+#include "Packet.h"
 
-void PacketRGB::encode(char *buffer)
+PacketRGB::PacketRGB(char *incommingBuffer) : Packet(incommingBuffer) {}
+PacketRGB::PacketRGB() : Packet() {}
+
+void PacketRGB::encode()
 {
+  writePacketID(PacketID::RGB_PACKET);
+  resetOffset();
   writeInt(red);
   writeInt(green);
   writeInt(blue);
 }
 
-void PacketRGB::decode(char *buffer)
+void PacketRGB::decode()
 {
+  resetOffset();
   red = readInt();
   green = readInt();
   blue = readInt();

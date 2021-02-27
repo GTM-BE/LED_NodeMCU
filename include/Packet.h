@@ -1,30 +1,38 @@
-#ifndef PACKET_H
-#define PACKET_H
+#ifndef PACKET_H_
+#define PACKET_H_
 
 #include "config.h"
 
 enum PacketID
 {
   INVALID = 0x00,
-  COLOR_RGB_PACKET = 0x01
+  RGB_PACKET = 0x01
 };
 
 class Packet
 {
 public:
-  int offset = 1;
+  unsigned int offset = 1;
   char buffer[256];
-  virtual void encode(char *buffer);
-  virtual void decode(char *buffer);
+
+public:
+  Packet();
+  Packet(char *incommingBuffer);
+  virtual void encode();
+  virtual void decode();
   virtual void handle();
 
-  void writeInt(int value);
-  int readInt();
-  void writeString(char value[]);
-  char *readString();
+  void writeInt(unsigned int value);
+  unsigned int readInt();
+  void writeLong(unsigned long value);
+  unsigned long readLong();
+  void writeString(String value);
+  String readString();
   void writeBool(bool value);
   bool readBool();
-  void setOffset(int value);
+  void setOffset(unsigned int value);
+  void writePacketID(PacketID id);
+  void resetOffset();
   bool send();
 };
 

@@ -1,5 +1,5 @@
-#ifndef LED_H
-#define LED_H
+#ifndef LED_H_
+#define LED_H_
 
 void flipLED();
 void fadeLED();

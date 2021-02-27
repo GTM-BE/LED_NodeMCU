@@ -9,6 +9,28 @@ UdpClient client;
 UdpServer server;
 #endif
 
+#define SYSTEM Master_NodeMCU
+
+#if SYSTEM == Master_NodeMCU
+IPAddress local_IP(192, 168, 178, 200);
+#elif SYSTEM == Slave1_NodeMCU
+IPAddress local_IP(192, 168, 178, 201);
+#elif SYSTEM == Slave2_NodeMCU
+IPAddress local_IP(192, 168, 178, 202);
+#endif
+
+IPAddress gateway(192, 168, 178, 1);
+IPAddress subnet(255, 255, 255, 0);
+
+void setWifiConfig()
+{
+  // AP config
+  WiFi.softAP(AP_SSID, AP_PASSWORD, 1, true, 1);
+
+  // Connection settings
+  WiFi.config(local_IP, gateway, subnet);
+}
+
 void getAvailabeNetworks()
 {
   int networkIndex = WiFi.scanNetworks();
@@ -27,7 +49,8 @@ void getAvailabeNetworks()
 
 void connect()
 {
-  Serial.println("Changeing AP config");
+  Serial.println("Changeing network config");
+  setWifiConfig();
   Serial.printf("Connecting to %s\n", WIFI_SSID);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
@@ -72,7 +95,8 @@ void connect()
     delay(1000);
   }
 
-  Serial.printf("Connected to WiFi \"%s\"\n", WIFI_SSID);
+  Serial.printf("Connected to WiFi: \"%s\"\n", WIFI_SSID);
+  Serial.printf("Device IP-address: \"%s\"\n", WiFi.localIP().toString().c_str());
   Serial.println("Start UDP socket");
   // start UDP socket
 #if IS_CLIENT == true

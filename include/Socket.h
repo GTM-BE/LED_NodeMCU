@@ -3,16 +3,18 @@
 
 #include <WiFiUdp.h>
 #include "config.h"
+#include "Packet.h"
 
 class Socket
 {
 public:
-  char packetBuffer[PACKET_SIZE];
+  char packetBuffer[256];
   WiFiUDP connection;
 
 public:
   virtual void tick();
   void bind();
+  Packet PacketFromBuffer(char *buffer);
 };
 
 #endif
