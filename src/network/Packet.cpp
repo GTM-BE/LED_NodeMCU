@@ -1,9 +1,18 @@
 #include <Arduino.h>
+#include <WiFiUdp.h>
 #include "Packet.h"
 
-Packet::Packet() {}
+Packet::Packet()
+{
+}
 
-Packet::Packet(char *incommingBuffer) {}
+Packet::Packet(char *buf)
+{
+  for (size_t i = 0; i < sizeof(buffer) / sizeof(buffer[0]); i++)
+  {
+    buffer[i] = buf[i];
+  }
+}
 
 void Packet::encode()
 {
@@ -27,6 +36,15 @@ void Packet::resetOffset()
 
 void Packet::writeInt(unsigned int value)
 {
+  /*
+  Serial.print("Buffer: ");
+  for (size_t i = 0; i < sizeof(buffer) / sizeof(buffer[0]); i++)
+  {
+    Serial.printf("%c ", buffer[i]);
+  }
+  Serial.print("\n");
+  Serial.printf("Offset %d\n", offset);
+  */
   char byte1 = (value & 0xFF); //extract first byte
   buffer[offset] = byte1;
   offset++;
@@ -74,6 +92,7 @@ unsigned long Packet::readLong()
 void Packet::writeString(String value)
 {
   writeInt(value.length());
+  offset++;
   for (unsigned int i = 0; i < value.length(); i++)
   {
     buffer[offset] = value.charAt(i);
@@ -101,7 +120,7 @@ void Packet::writeBool(bool value)
 
 bool Packet::readBool()
 {
-  bool value = buffer[offset];
+  bool value = &buffer[offset];
   offset++;
   return value;
 }
@@ -115,8 +134,17 @@ void Packet::setOffset(unsigned int value)
 {
   offset = value;
 }
-
-bool Packet::send()
+unsigned int Packet::getOffset()
 {
+  return offset;
+};
+
+char *Packet::getBuffer()
+{
+  return buffer;
+}
+bool Packet::send(WiFiUDP connection)
+{
+  connection.write(buffer);
   return true;
 }

@@ -1,4 +1,5 @@
 
+#include <iostream>
 #include <Arduino.h>
 #include <WiFiUdp.h>
 #include <ESP8266WiFi.h>
@@ -15,25 +16,29 @@ void Socket::tick()
 
 void Socket::bind()
 {
+#if SYSTEM == 0
+  connection.begin(rand() % 6000 + 7000);
+#else
   connection.begin(WIFI_PORT);
+#endif
+
   while (WiFi.status() == WL_CONNECTED)
   {
     tick();
-    delay(0.001);
+    delay(1);
   }
   Serial.println("Connection lost!");
 };
 
-Packet Socket::PacketFromBuffer(char *buffer)
+std::unique_ptr<Packet> Socket::PacketFromBuffer(char buffer[])
 {
   switch (buffer[0])
   {
   case PacketID::RGB_PACKET:
-    Serial.println("Got RGB PK");
-    PacketRGB rgb_pk(buffer);
-    return rgb_pk;
+    return std::unique_ptr<Packet>(new PacketRGB(buffer));
+    break;
+  default:
+    return std::unique_ptr<Packet>(new Packet(buffer));
     break;
   }
-  Packet pk(buffer);
-  return pk;
 }

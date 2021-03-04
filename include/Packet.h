@@ -1,23 +1,27 @@
 #ifndef PACKET_H_
 #define PACKET_H_
 
+#include <WiFiUdp.h>
 #include "config.h"
 
 enum PacketID
 {
   INVALID = 0x00,
-  RGB_PACKET = 0x01
+  TEST_PACKET = 0x01,
+  RGB_PACKET = 0x02
 };
 
 class Packet
 {
 public:
-  unsigned int offset = 1;
-  char buffer[256];
+  unsigned int offset = 0;
+
+public:
+  char buffer[255];
 
 public:
   Packet();
-  Packet(char *incommingBuffer);
+  Packet(char *buf);
   virtual void encode();
   virtual void decode();
   virtual void handle();
@@ -30,10 +34,12 @@ public:
   String readString();
   void writeBool(bool value);
   bool readBool();
-  void setOffset(unsigned int value);
   void writePacketID(PacketID id);
+  void setOffset(unsigned int value);
+  unsigned int getOffset();
+  char *getBuffer();
   void resetOffset();
-  bool send();
+  bool send(WiFiUDP connection);
 };
 
 #endif

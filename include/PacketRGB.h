@@ -12,7 +12,7 @@ public:
 
 public:
   PacketRGB();
-  PacketRGB(char *incommingBuffer);
+  PacketRGB(char *buf);
   void encode() override;
   void decode() override;
   void handle() override;

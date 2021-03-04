@@ -2,6 +2,10 @@
 #define CONFIG_H_
 #include <ESP8266WiFi.h>
 
+#define SYSTEM 1
+
+#define MAX_PACKET_LENGTH 255
+
 // LED
 #define LED_RED D1
 #define LED_GREEN D2

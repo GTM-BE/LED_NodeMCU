@@ -3,8 +3,13 @@
 #include "PacketRGB.h"
 #include "Packet.h"
 
-PacketRGB::PacketRGB(char *incommingBuffer) : Packet(incommingBuffer) {}
-PacketRGB::PacketRGB() : Packet() {}
+PacketRGB::PacketRGB() : Packet()
+{
+}
+
+PacketRGB::PacketRGB(char *buf) : Packet(buf)
+{
+}
 
 void PacketRGB::encode()
 {

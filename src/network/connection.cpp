@@ -1,22 +1,23 @@
 #include <ESP8266WiFi.h>
 #include "config.h"
 
-#if IS_CLIENT == true
-#include "UdpClient.h"
-UdpClient client;
-#else
+IPAddress SlaveAddresses[2] = {IPAddress(192, 168, 179, 201), IPAddress(192, 168, 179, 202)};
+IPAddress MasterAddress = IPAddress(192, 168, 179, 200);
+
+#if SYSTEM == 0
 #include "UdpServer.h"
 UdpServer server;
+#else
+#include "UdpClient.h"
+UdpClient client;
 #endif
 
-#define SYSTEM Master_NodeMCU
-
-#if SYSTEM == Master_NodeMCU
-IPAddress local_IP(192, 168, 178, 200);
-#elif SYSTEM == Slave1_NodeMCU
-IPAddress local_IP(192, 168, 178, 201);
-#elif SYSTEM == Slave2_NodeMCU
-IPAddress local_IP(192, 168, 178, 202);
+#if SYSTEM == 0
+IPAddress local_IP = MasterAddress;
+#elif SYSTEM == 1
+IPAddress local_IP = SlaveAddresses[1];
+#elif SYSTEM == 2
+IPAddress local_IP = SlaveAddresses[2];
 #endif
 
 IPAddress gateway(192, 168, 178, 1);
@@ -98,10 +99,11 @@ void connect()
   Serial.printf("Connected to WiFi: \"%s\"\n", WIFI_SSID);
   Serial.printf("Device IP-address: \"%s\"\n", WiFi.localIP().toString().c_str());
   Serial.println("Start UDP socket");
-  // start UDP socket
-#if IS_CLIENT == true
-  client.bind();
+
+// start UDP socket
+#if SYSTEM == 0
+  server.bind();
 #else
-  server.bind()
+  client.bind();
 #endif
 }
