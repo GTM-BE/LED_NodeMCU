@@ -4,10 +4,10 @@
 #include <WiFiUdp.h>
 #include <ESP8266WiFi.h>
 #include "config.h"
-#include "Socket.h"
-#include "Packet.h"
+#include "network/UDP/Socket.h"
+#include "network/UDP/Packet.h"
 
-#include "PacketRGB.h"
+#include "network/UDP/packets/SetColorPacket.h"
 
 void Socket::tick()
 {
@@ -19,7 +19,7 @@ void Socket::bind()
 #if SYSTEM == 0
   connection.begin(rand() % 6000 + 7000);
 #else
-  connection.begin(WIFI_PORT);
+  connection.begin(CLIENT_PORT);
 #endif
 
   while (WiFi.status() == WL_CONNECTED)
@@ -35,10 +35,23 @@ std::unique_ptr<Packet> Socket::PacketFromBuffer(char buffer[])
   switch (buffer[0])
   {
   case PacketID::RGB_PACKET:
-    return std::unique_ptr<Packet>(new PacketRGB(buffer));
+    return std::unique_ptr<Packet>(new SetColorPacket(buffer));
     break;
   default:
     return std::unique_ptr<Packet>(new Packet(buffer));
+    break;
+  }
+}
+
+std::unique_ptr<Packet> Socket::PacketFromID(PacketID id)
+{
+  switch (id)
+  {
+  case PacketID::RGB_PACKET:
+    return std::unique_ptr<Packet>(new SetColorPacket());
+    break;
+  default:
+    return std::unique_ptr<Packet>(new Packet(PacketID::INVALID_PACKET));
     break;
   }
 }

@@ -7,7 +7,6 @@ extern IPAddress SlaveAddresses[2];
 extern IPAddress MasterAddress;
 
 void connect();
-void setAPConfig();
 
 /**
  * // Send Packet

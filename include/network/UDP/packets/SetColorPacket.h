@@ -1,9 +1,9 @@
 #ifndef PACKET_RGB_H_
 #define PACKET_RGB_H_
 
-#include "Packet.h"
+#include "network/UDP/Packet.h"
 
-class PacketRGB : public Packet
+class SetColorPacket : public Packet
 {
 public:
   unsigned int red = 0;
@@ -11,8 +11,8 @@ public:
   unsigned int blue = 0;
 
 public:
-  PacketRGB();
-  PacketRGB(char *buf);
+  SetColorPacket();
+  SetColorPacket(char *buf);
   void encode() override;
   void decode() override;
   void handle() override;

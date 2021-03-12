@@ -1,9 +1,10 @@
 #include <Arduino.h>
 #include <WiFiUdp.h>
-#include "Packet.h"
+#include "network/UDP/Packet.h"
 
-Packet::Packet()
+Packet::Packet(PacketID packetID)
 {
+  id = packetID;
 }
 
 Packet::Packet(char *buf)
@@ -36,28 +37,14 @@ void Packet::resetOffset()
 
 void Packet::writeInt(unsigned int value)
 {
-  /*
-  Serial.print("Buffer: ");
-  for (size_t i = 0; i < sizeof(buffer) / sizeof(buffer[0]); i++)
-  {
-    Serial.printf("%c ", buffer[i]);
-  }
-  Serial.print("\n");
-  Serial.printf("Offset %d\n", offset);
-  */
-  char byte1 = (value & 0xFF); //extract first byte
-  buffer[offset] = byte1;
+  buffer[offset] = (value & 0xFF); //extract first byte
   offset++;
-  char byte2 = ((value >> 8) & 0xFF); //extract second byte
-  buffer[offset] = byte2;
+  buffer[offset] = ((value >> 8) & 0xFF); //extract second byte
   offset++;
-  char byte3 = ((value >> 16) & 0xFF); //extract third byte
-  buffer[offset] = byte3;
+  buffer[offset] = ((value >> 16) & 0xFF); //extract third byte
   offset++;
-  char byte4 = ((value >> 24) & 0xFF); //extract fourth byte
-  buffer[offset] = byte4;
+  buffer[offset] = ((value >> 24) & 0xFF); //extract fourth byte
   offset++;
-  // Serial.printf("Bit1: %d Bit2: %d Bit3: %d Bit4: %d\n", byte1, byte2, byte3, byte4);
 }
 
 unsigned int Packet::readInt()
@@ -70,7 +57,6 @@ unsigned int Packet::readInt()
   offset++;
   char byte4 = buffer[offset];
   offset++;
-  // Serial.printf("Bit1: %d Bit2: %d Bit3: %d Bit4: %d\n", byte1, byte2, byte3, byte4);
   return (byte4 << 24) | (byte3 << 16) | (byte2 << 8) | byte1;
 }
 
@@ -125,11 +111,6 @@ bool Packet::readBool()
   return value;
 }
 
-void Packet::writePacketID(PacketID id)
-{
-  buffer[0] = id;
-}
-
 void Packet::setOffset(unsigned int value)
 {
   offset = value;
@@ -139,10 +120,25 @@ unsigned int Packet::getOffset()
   return offset;
 };
 
+void Packet::setPayload()
+{
+  resetOffset();
+  buffer[0] = id;
+  writeLong(number);
+}
+
+void Packet::getPayload()
+{
+  resetOffset();
+  id = (PacketID)buffer[0];
+  number = readLong();
+}
+
 char *Packet::getBuffer()
 {
   return buffer;
 }
+
 bool Packet::send(WiFiUDP connection)
 {
   connection.write(buffer);

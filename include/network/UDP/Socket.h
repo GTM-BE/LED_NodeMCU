@@ -4,7 +4,7 @@
 #include <iostream>
 #include <WiFiUdp.h>
 #include "config.h"
-#include "Packet.h"
+#include "network/UDP/Packet.h"
 
 class Socket
 {
@@ -16,6 +16,7 @@ public:
   virtual void tick();
   void bind();
   std::unique_ptr<Packet> PacketFromBuffer(char *buffer);
+  std::unique_ptr<Packet> PacketFromID(PacketID id);
 };
 
 #endif

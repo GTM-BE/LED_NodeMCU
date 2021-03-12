@@ -6,7 +6,7 @@
 
 enum PacketID
 {
-  INVALID = 0x00,
+  INVALID_PACKET = 0x00,
   TEST_PACKET = 0x01,
   RGB_PACKET = 0x02
 };
@@ -14,13 +14,13 @@ enum PacketID
 class Packet
 {
 public:
+  PacketID id;
+  unsigned long number = 0;
   unsigned int offset = 0;
-
-public:
   char buffer[255];
 
 public:
-  Packet();
+  Packet(PacketID packetID);
   Packet(char *buf);
   virtual void encode();
   virtual void decode();
@@ -34,10 +34,11 @@ public:
   String readString();
   void writeBool(bool value);
   bool readBool();
-  void writePacketID(PacketID id);
   void setOffset(unsigned int value);
   unsigned int getOffset();
   char *getBuffer();
+  void setPayload();
+  void getPayload();
   void resetOffset();
   bool send(WiFiUDP connection);
 };

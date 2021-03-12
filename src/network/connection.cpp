@@ -1,35 +1,52 @@
 #include <ESP8266WiFi.h>
+#include "network/webServer/WebServer.h"
 #include "config.h"
 
-IPAddress SlaveAddresses[2] = {IPAddress(192, 168, 179, 201), IPAddress(192, 168, 179, 202)};
-IPAddress MasterAddress = IPAddress(192, 168, 179, 200);
+IPAddress SlaveAddresses[2] = {IPAddress(192, 168, 200, 201), IPAddress(192, 168, 200, 202)};
+IPAddress MasterAddress = IPAddress(192, 168, 178, 200);
 
 #if SYSTEM == 0
-#include "UdpServer.h"
+#include "network/UDP/UdpServer.h"
 UdpServer server;
 #else
-#include "UdpClient.h"
+#include "network/UDP/UdpServer.h"
 UdpClient client;
 #endif
 
 #if SYSTEM == 0
 IPAddress local_IP = MasterAddress;
 #elif SYSTEM == 1
-IPAddress local_IP = SlaveAddresses[1];
+IPAddress local_IP = SlaveAddresses[0];
 #elif SYSTEM == 2
-IPAddress local_IP = SlaveAddresses[2];
+IPAddress local_IP = SlaveAddresses[1];
 #endif
 
-IPAddress gateway(192, 168, 178, 1);
+IPAddress gateway(192, 168, 200, 1);
 IPAddress subnet(255, 255, 255, 0);
 
 void setWifiConfig()
 {
   // AP config
-  WiFi.softAP(AP_SSID, AP_PASSWORD, 1, true, 1);
+  if (WiFi.softAP(AP_SSID, AP_PASSWORD, 0, true))
+  {
+    Serial.printf("AP config\nSSID: %s\nPassword: %s\n", AP_SSID, AP_PASSWORD);
+    Serial.println("---------------------------------------------------");
+  }
+  else
+  {
+    Serial.println("Failed to change AP config!");
+  }
 
   // Connection settings
-  WiFi.config(local_IP, gateway, subnet);
+  if (WiFi.config(local_IP, gateway, subnet))
+  {
+    Serial.printf("Connection config\nLocalIP: %s\nGateway: %s\nSubnet: %s\n", local_IP.toString().c_str(), gateway.toString().c_str(), subnet.toString().c_str());
+    Serial.println("---------------------------------------------------");
+  }
+  else
+  {
+    Serial.println("Failed to change connection settings");
+  };
 }
 
 void getAvailabeNetworks()
@@ -50,8 +67,6 @@ void getAvailabeNetworks()
 
 void connect()
 {
-  Serial.println("Changeing network config");
-  setWifiConfig();
   Serial.printf("Connecting to %s\n", WIFI_SSID);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
@@ -95,15 +110,19 @@ void connect()
     }
     delay(1000);
   }
-
+  setWifiConfig();
   Serial.printf("Connected to WiFi: \"%s\"\n", WIFI_SSID);
   Serial.printf("Device IP-address: \"%s\"\n", WiFi.localIP().toString().c_str());
-  Serial.println("Start UDP socket");
 
 // start UDP socket
 #if SYSTEM == 0
-  server.bind();
+  Serial.println("Start web server");
+  initWebServer();
+  //Serial.println("Start UDP server");
+  //server.bind();
 #else
+  Serial.println("Start UDP Client");
   client.bind();
 #endif
+  Serial.println("---------------------------------------------------");
 }
