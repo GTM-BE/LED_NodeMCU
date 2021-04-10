@@ -1,0 +1,12 @@
+
+POST http://192.168.178.254/api/v1/broadcast HTTP/1.1
+content-type: application/json
+
+{
+    "endpoint": "/led_color",
+    "data": {
+        "red": 1000,
+        "green": 100,
+        "blue": 10
+    }
+}

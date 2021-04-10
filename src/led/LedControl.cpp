@@ -1,32 +1,41 @@
 #include <Arduino.h>
-#include "config.h"
+#include "main.h"
 #include "led/worker.h"
 #include <map>
+#include "AsyncJson.h"
+#include "ArduinoJson.h"
 
 #include "led/worker/BlinkWorker.h"
 #include "led/worker/FadeToWorker.h"
 
-void LedControl::playWorker(WorkerID id)
+LedControl::LedControl() {}
+
+void LedControl::playWorker(Worker *nextWorker)
 {
-  playWorker(id, false);
+  playWorker(nextWorker, false);
 }
 
-void LedControl::playWorker(WorkerID id, bool waitOnCurrentWorker)
+void LedControl::playWorker(Worker *nextWorker, bool skip)
 {
-  std::map<uint8_t, String> empty_map;
-  playWorker(id, waitOnCurrentWorker, empty_map);
+  if (skip)
+  {
+    queue.clear();
+    currentWorker = nextWorker;
+  }
+  else
+  {
+    queue.push_back(nextWorker);
+  }
 }
-
-void LedControl::playWorker(WorkerID id, std::map<uint8_t, String> data)
-{
-  playWorker(id, false, data);
-}
-
-void LedControl::playWorker(WorkerID id, bool waitOnCurrentWorker, std::map<uint8_t, String> data) {}
 
 void LedControl::tick()
 {
-  currentWorker.tick();
+  if (currentWorker->status == WorkerStatus::FINISHED_WORKER)
+  {
+    currentWorker = queue.front() ? queue.front() : new Worker();
+    queue.pop_front();
+  }
+  currentWorker->tick();
 }
 
 void LedControl::setColor(unsigned int red, unsigned int green, unsigned int blue)
@@ -43,3 +52,10 @@ void LedControl::initLEDs()
   pinMode(LED_BLUE, OUTPUT);  //LED pin as output
   setColor(LOW, LOW, LOW);
 }
+
+RGB::RGB(unsigned int _red, unsigned int _green, unsigned int _blue)
+{
+  red = _red;
+  green = _green;
+  blue = _blue;
+};
