@@ -1,9 +1,18 @@
 #include "network/webServer/WebServer.h"
 #include "led/LedControl.h"
-#include "config.h"
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
+#include <ESP8266HTTPClient.h>
 #include <string>
+#include "main.h"
+#include "AsyncJson.h"
+#include "ArduinoJson.h"
+
+#include "led/worker/SetColorWorker.h"
+#include "led/worker/BlinkWorker.h"
+#include "led/worker/FadeToWorker.h"
+
+AsyncWebServer website(80);
 
 // Placeholder: <CONTENT>
 char index_HTML[] = {
@@ -30,103 +39,153 @@ char test_HTML[] = {
 #include "network/webServer/html/content/test.html"
 };
 
-void sendHtml(AsyncWebServerRequest *request, char *content, int code)
+void WebServer::bind()
+{
+  bind(80);
+};
+
+void WebServer::bind(int port)
+{
+  // Create AsyncWebServer
+  website.onNotFound([&](AsyncWebServerRequest *request) {
+    sendNotFound(request);
+  });
+
+  /*---------- Website routes ----------*/
+  website.on("/", HTTP_GET, [&](AsyncWebServerRequest *request) {
+    request->redirect("/slider");
+  });
+
+  website.on("/slider", HTTP_GET, [&](AsyncWebServerRequest *request) {
+    sendHtml(request, slider_HTML);
+  });
+
+  website.on("/buttons", HTTP_GET, [&](AsyncWebServerRequest *request) {
+    sendHtml(request, buttons_HTML);
+  });
+
+  website.on("/color", HTTP_GET, [&](AsyncWebServerRequest *request) {
+    sendHtml(request, color_HTML);
+  });
+
+  website.on("/test", HTTP_GET, [&](AsyncWebServerRequest *request) {
+    sendHtml(request, test_HTML);
+  });
+
+  registerEndpoints(&website);
+
+  website.begin();
+}
+
+void WebServer::sendHtml(AsyncWebServerRequest *request, char *content, int code)
 {
   String index_template(index_HTML);
   index_template.replace("<content>", content);
   index_template.replace("<value_red>", String(analogRead(LED_RED)));
   index_template.replace("<value_green>", String(analogRead(LED_GREEN)));
   index_template.replace("<value_blue>", String(analogRead(LED_BLUE)));
+  index_template.replace("<master_ip>", master.toString());
 
-  request->send_P(code, "text/html", index_template.c_str());
+  request->send(code, "text/html", index_template);
   return;
 };
 
-void sendHtml(AsyncWebServerRequest *request, char *content)
+void WebServer::sendHtml(AsyncWebServerRequest *request, char *content)
 {
   sendHtml(request, content, 200);
   return;
 }
 
-void sendNotFound(AsyncWebServerRequest *request)
+void WebServer::sendNotFound(AsyncWebServerRequest *request)
 {
   sendHtml(request, not_found_HTML, 404);
   return;
 }
 
-void initWebServer(int port)
+void WebServer::registerEndpoints(AsyncWebServer *website)
 {
-  // Create AsyncWebServer object on port 80
-  AsyncWebServer website(80);
+  /*---------- API endpoints ----------*/
+  // Shared
+  website->on("/api/v1/system_status", HTTP_GET, [&](AsyncWebServerRequest *request) {
+    DynamicJsonDocument statusJson(254);
+    statusJson["status"] = "okay";
+    statusJson["memory"] = system_get_free_heap_size();
+    statusJson["ip"] = WiFi.localIP().toString();
 
-  website.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-    uint32_t free = system_get_free_heap_size();
-    Serial.printf("%d\n", free);
-    sendHtml(request, slider_HTML);
+    String statusResponse;
+    serializeJson(statusJson, statusResponse);
+    request->send(200, "application/json", statusResponse);
   });
 
-  website.onNotFound(sendNotFound);
-
-  website.on("/slider", HTTP_GET, [](AsyncWebServerRequest *request) {
-    sendHtml(request, slider_HTML);
-  });
-
-  website.on("/buttons", HTTP_GET, [](AsyncWebServerRequest *request) {
-    sendHtml(request, buttons_HTML);
-  });
-
-  website.on("/color", HTTP_GET, [](AsyncWebServerRequest *request) {
-    sendHtml(request, color_HTML);
-  });
-
-  website.on("/test", HTTP_GET, [](AsyncWebServerRequest *request) {
-    sendHtml(request, test_HTML);
-  });
-
-  website.on("/update", HTTP_GET, [](AsyncWebServerRequest *request) {
-    if (request->hasParam("worker"))
+  // Server
+#if System == 0
+  AsyncCallbackJsonWebHandler *broadcastHandler = new AsyncCallbackJsonWebHandler("/api/v1/broadcast", [&](AsyncWebServerRequest *request, JsonVariant &json) {
+    JsonObject data = json.as<JsonObject>();
+    Serial.println("GOT BROADCAST DATA");
+    String endpoint = data["endpoint"].as<String>();
+    data.remove("endpoint");
+    JsonObject jsonData = data["data"].as<JsonObject>();
+    String redirectData;
+    serializeJson(jsonData, redirectData);
+    Serial.println(redirectData);
+    for (std::pair<const String, LedClient *> ledClient : clientMap)
     {
-      AsyncWebParameter *workerStr = request->getParam("worker");
-      unsigned int id;
-      std::stringstream ssW(workerStr->value().c_str());
-      ssW >> id;
-
-      std::map<uint8_t, String> data;
-      int args = request->args();
-
-      // LedControl::playWorker((WorkerID)id, request->hasParam("skip"));
+      String URL = "http://" + ledClient.first + endpoint;
+      httpClient.begin(wifiClient, URL);
+      httpClient.POST(redirectData);
+      httpClient.addHeader("Content-Type", "application/json");
+      httpClient.end();
+      Serial.println(URL);
     }
-    /*
-    else if (request->hasParam("red") && request->hasParam("green") && request->hasParam("blue"))
+    Serial.println("Finished sending!");
+    request->send(200, "application/json", responseOkayJson);
+  });
+  website->addHandler(broadcastHandler);
+
+  AsyncCallbackJsonWebHandler *akSlaveHandler = new AsyncCallbackJsonWebHandler("/api/v1/ak_slave", [&](AsyncWebServerRequest *request, JsonVariant &json) {
+    JsonObject data = json.as<JsonObject>();
+    String deviceIP = data["ip"].as<String>();
+    if (clientMap[deviceIP])
     {
-      AsyncWebParameter *channelRED = request->getParam("red");
-      AsyncWebParameter *channelGREEN = request->getParam("green");
-      AsyncWebParameter *channelBLUE = request->getParam("blue");
-
-      unsigned int red, green, blue;
-      std::stringstream ssR(channelRED->value().c_str());
-      ssR >> red;
-      std::stringstream ssG(channelGREEN->value().c_str());
-      ssG >> green;
-      std::stringstream ssB(channelBLUE->value().c_str());
-      ssB >> blue;
-      LedControl::setColor(red, green, blue);
+      clientMap[deviceIP]->update();
     }
-    */
     else
     {
-      int args = request->args();
-      for (int i = 1; i < args; i++)
-      {
-      }
+      clientMap[deviceIP] = new LedClient(deviceIP);
     }
-    request->send_P(200, "text/text", "everything okay");
+    /*
+    Serial.println("Device Found!!!");
+    Serial.println(deviceIP);
+    */
+    request->send(200, "application/json", responseOkayJson);
   });
+  website->addHandler(akSlaveHandler);
+#endif
 
-  website.begin();
-}
+  // Client
+#if System != 0
+  AsyncCallbackJsonWebHandler *setColorHandler = new AsyncCallbackJsonWebHandler("/api/v1/set_color", [&](AsyncWebServerRequest *request, JsonVariant &json) {
+    JsonObject data = json.as<JsonObject>();
+    bool skip = data["skip"].as<bool>();
+    unsigned int red = data["red"].as<unsigned int>();
+    unsigned int green = data["green"].as<unsigned int>();
+    unsigned int blue = data["blue"].as<unsigned int>();
+    led.playWorker(new SetColorWorker(red, green, blue), skip);
+    request->send(200, "application/json", responseOkayJson);
+  });
+  website->addHandler(setColorHandler);
 
-void initWebServer()
-{
-  initWebServer(80);
+  AsyncCallbackJsonWebHandler *blinkHandler = new AsyncCallbackJsonWebHandler("/api/v1/blink", [&](AsyncWebServerRequest *request, JsonVariant &json) {
+    request->send(200, "application/json", responseOkayJson);
+    JsonObject data = json.as<JsonObject>();
+    bool skip = data["skip"].as<bool>();
+    unsigned int red = data["red"].as<unsigned int>();
+    unsigned int green = data["green"].as<unsigned int>();
+    unsigned int blue = data["blue"].as<unsigned int>();
+    bool delay = data["delay"].as<bool>();
+    led.playWorker(new BlinkWorker(delay, new RGB(red, green, blue)), skip);
+    request->send(200, "application/json", responseOkayJson);
+  });
+  website->addHandler(blinkHandler);
+#endif
 };

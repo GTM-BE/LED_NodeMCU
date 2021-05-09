@@ -1,28 +1,8 @@
 #include <ESP8266WiFi.h>
 #include "network/webServer/WebServer.h"
-#include "config.h"
+#include "main.h"
 
-IPAddress SlaveAddresses[2] = {IPAddress(192, 168, 200, 201), IPAddress(192, 168, 200, 202)};
-IPAddress MasterAddress = IPAddress(192, 168, 178, 200);
-
-#if SYSTEM == 0
-#include "network/UDP/UdpServer.h"
-UdpServer server;
-#else
-#include "network/UDP/UdpServer.h"
-UdpClient client;
-#endif
-
-#if SYSTEM == 0
-IPAddress local_IP = MasterAddress;
-#elif SYSTEM == 1
-IPAddress local_IP = SlaveAddresses[0];
-#elif SYSTEM == 2
-IPAddress local_IP = SlaveAddresses[1];
-#endif
-
-IPAddress gateway(192, 168, 200, 1);
-IPAddress subnet(255, 255, 255, 0);
+WebServer webServer;
 
 void setWifiConfig()
 {
@@ -37,16 +17,18 @@ void setWifiConfig()
     Serial.println("Failed to change AP config!");
   }
 
-  // Connection settings
-  if (WiFi.config(local_IP, gateway, subnet))
+// Connection settings
+#if SYSTEM == 0
+  if (WiFi.config(master, gateway, subnet))
   {
-    Serial.printf("Connection config\nLocalIP: %s\nGateway: %s\nSubnet: %s\n", local_IP.toString().c_str(), gateway.toString().c_str(), subnet.toString().c_str());
+    Serial.printf("Connection config\nLocalIP: %s\nGateway: %s\nSubnet: %s\n", master.toString().c_str(), gateway.toString().c_str(), subnet.toString().c_str());
     Serial.println("---------------------------------------------------");
   }
   else
   {
     Serial.println("Failed to change connection settings");
   };
+#endif
 }
 
 void getAvailabeNetworks()
@@ -117,12 +99,9 @@ void connect()
 // start UDP socket
 #if SYSTEM == 0
   Serial.println("Start web server");
-  initWebServer();
-  //Serial.println("Start UDP server");
-  //server.bind();
 #else
-  Serial.println("Start UDP Client");
-  client.bind();
+  Serial.println("Start web client");
 #endif
+  webServer.bind();
   Serial.println("---------------------------------------------------");
 }

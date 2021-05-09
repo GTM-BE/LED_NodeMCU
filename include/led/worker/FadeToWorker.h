@@ -7,12 +7,12 @@
 class FadeToWorker : public Worker
 {
 public:
-  RGB fadeColor;
+  RGB *fadeColor;
   unsigned int fadeStep;
 
 public:
-  FadeToWorker(RGB color);
-  FadeToWorker(RGB color, unsigned int step);
+  FadeToWorker(RGB *color);
+  FadeToWorker(RGB *color, unsigned int step);
   void onTick() override;
   void fadeChannel(uint8_t channel, signed int brightness);
 };

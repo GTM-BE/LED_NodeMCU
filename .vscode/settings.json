@@ -38,6 +38,8 @@
     "*.html": "cpp",
     "regex": "cpp",
     "bitset": "cpp",
-    "ctime": "cpp"
+    "ctime": "cpp",
+    "string": "cpp",
+    "map": "cpp"
   }
 }
