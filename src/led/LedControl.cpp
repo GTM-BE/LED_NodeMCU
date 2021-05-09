@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "main.h"
+#include "config.h"
 #include "led/worker.h"
 #include <map>
 #include "AsyncJson.h"

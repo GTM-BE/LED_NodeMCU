@@ -2,7 +2,7 @@
 #include "led/worker/FadeToWorker.h"
 #include "led/LedControl.h"
 #include "led/Worker.h"
-#include "main.h"
+#include "config.h"
 
 FadeToWorker::FadeToWorker(RGB *color) : Worker(WorkerID::FADE_TO_WORKER)
 {

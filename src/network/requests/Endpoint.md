@@ -38,33 +38,3 @@ Set LED strip color
 | `green` | unsinged int | Green value for LED |
 | `blue`  | unsinged int | Blue value for LED  |
 
-# Server
-
-## Acknowledge slave
-
-This has to be send every 30 secconds to get instructions from the server device
-
-| Endpoint    | request Type |
-| ----------- | ------------ |
-| `/ak-slave` | `POST`       |
-
-### given data:
-
-| name | value  | description            |
-| ---- | ------ | ---------------------- |
-| `ip` | String | Slave local ip address |
-
-## Broadcast
-
-This endpoint is sending all slave devices your given data
-
-| Endpoint     | request Type |
-| ------------ | ------------ |
-| `/broadcast` | `POST`       |
-
-### Given data
-
-| name       | value  | desciption                             |
-| ---------- | ------ | -------------------------------------- |
-| `endpoint` | String | endpoint to send data to slave devices |
-| `...`      | any    | data for given endpoint                |

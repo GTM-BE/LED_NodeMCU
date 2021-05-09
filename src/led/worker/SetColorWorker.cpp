@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "led/worker/SetColorWorker.h"
 #include "led/LedControl.h"
-#include "main.h"
+#include "config.h"
 
 SetColorWorker::SetColorWorker(RGB *color) : Worker(WorkerID::SET_COLOR_WORKER)
 {

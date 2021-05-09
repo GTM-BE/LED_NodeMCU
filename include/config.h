@@ -4,15 +4,13 @@
 #include "led/LedControl.h"
 #include <ESP8266HTTPClient.h>
 
-extern IPAddress master;
+extern IPAddress RasberriPI;
 extern IPAddress subnet;
 extern IPAddress gateway;
 extern LedControl led;
 
 extern WiFiClient wifiClient;
 extern HTTPClient httpClient;
-
-//#define SYSTEM 1
 
 // LED
 #define LED_RED D1

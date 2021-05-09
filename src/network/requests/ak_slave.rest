@@ -1,7 +1,0 @@
-POST http://192.168.178.254/api/v1/ak_slave HTTP/1.1
-Content-Type: application/json
-
-{
-    "ip": "255.255.255.255",
-}
-

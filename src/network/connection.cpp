@@ -1,6 +1,6 @@
 #include <ESP8266WiFi.h>
-#include "network/webServer/WebServer.h"
-#include "main.h"
+#include "network/WebServer.h"
+#include "config.h"
 
 WebServer webServer;
 
@@ -16,19 +16,6 @@ void setWifiConfig()
   {
     Serial.println("Failed to change AP config!");
   }
-
-// Connection settings
-#if SYSTEM == 0
-  if (WiFi.config(master, gateway, subnet))
-  {
-    Serial.printf("Connection config\nLocalIP: %s\nGateway: %s\nSubnet: %s\n", master.toString().c_str(), gateway.toString().c_str(), subnet.toString().c_str());
-    Serial.println("---------------------------------------------------");
-  }
-  else
-  {
-    Serial.println("Failed to change connection settings");
-  };
-#endif
 }
 
 void getAvailabeNetworks()
@@ -92,16 +79,10 @@ void connect()
     }
     delay(1000);
   }
+
   setWifiConfig();
+  webServer.bind();
   Serial.printf("Connected to WiFi: \"%s\"\n", WIFI_SSID);
   Serial.printf("Device IP-address: \"%s\"\n", WiFi.localIP().toString().c_str());
-
-// start UDP socket
-#if SYSTEM == 0
-  Serial.println("Start web server");
-#else
-  Serial.println("Start web client");
-#endif
-  webServer.bind();
   Serial.println("---------------------------------------------------");
 }

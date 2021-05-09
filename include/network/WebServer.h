@@ -4,23 +4,18 @@
 #include <ESP8266WiFi.h>
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include "network/webServer/LedClient.h"
 #include <map>
 
 class WebServer
 {
 private:
-  std::map<String, LedClient *> clientMap;
   const String responseOkayJson = "{\nstatus: \"okay\"\n}";
   const String responseBadJson = "{\nstatus: \"bad\"\n}";
+  const String API_VERSION = "v1";
 
 public:
-  void
-  bind();
+  void bind();
   void bind(int port);
-  void sendHtml(AsyncWebServerRequest *request, char *content, int code);
-  void sendHtml(AsyncWebServerRequest *request, char *content);
-  void sendNotFound(AsyncWebServerRequest *request);
 
 private:
   void registerEndpoints(AsyncWebServer *website);

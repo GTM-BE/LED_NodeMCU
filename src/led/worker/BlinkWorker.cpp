@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "led/worker/BlinkWorker.h"
 #include "led/LedControl.h"
-#include "main.h"
+#include "config.h"
 
 BlinkWorker::BlinkWorker(unsigned int _onDelay, unsigned int _offDelay, RGB *_color) : Worker(WorkerID::BLINK_WORKER)
 {
