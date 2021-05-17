@@ -20,8 +20,8 @@ public:
 class LedControl
 {
 private:
-  Worker *currentWorker;
   std::list<Worker *> queue;
+  Worker *currentWorker;
 
 public:
   LedControl();
@@ -30,7 +30,10 @@ public:
   static void setColor(RGB colors);
 
   void playWorker(Worker *nextWorker);
-  void playWorker(Worker *nextWorker, bool skip);
+  void addToQueue(Worker *nextWorker);
+  void skipWorker();
+  void stop();
+  void clear();
   void tick();
 };
 

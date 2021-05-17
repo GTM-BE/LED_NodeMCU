@@ -24,7 +24,6 @@ void WebServer::bind(int port)
 {
   // Create AsyncWebServer
   registerEndpoints(&website);
-
   website.begin();
 }
 
@@ -42,27 +41,64 @@ void WebServer::registerEndpoints(AsyncWebServer *website)
     request->send(200, "application/json", statusResponse);
   });
 
-  AsyncCallbackJsonWebHandler *setColorHandler = new AsyncCallbackJsonWebHandler("/api/v1/set_color", [&](AsyncWebServerRequest *request, JsonVariant &json) {
+  website->on("/api/v1/worker/clear", HTTP_GET, [&](AsyncWebServerRequest *request) {
+    led.clear();
+    request->send(200, "application/json", responseOkayJson);
+  });
+  
+  website->on("/api/v1/worker/stop", HTTP_GET, [&](AsyncWebServerRequest *request) {
+    led.stop();
+    request->send(200, "application/json", responseOkayJson);
+  });
+  
+  /*---------- API for LED's ----------*/
+  AsyncCallbackJsonWebHandler *workerBlinkHandler = new AsyncCallbackJsonWebHandler("/api/v1/worker/blink", [&](AsyncWebServerRequest *request, JsonVariant &json) {
     JsonObject data = json.as<JsonObject>();
     bool skip = data["skip"].as<bool>();
+    unsigned int delay = data["delay"].as<unsigned int>();
     unsigned int red = data["red"].as<unsigned int>();
     unsigned int green = data["green"].as<unsigned int>();
     unsigned int blue = data["blue"].as<unsigned int>();
-    led.playWorker(new SetColorWorker(red, green, blue), skip);
-    request->send(200, "application/json", responseOkayJson);
-  });
-  website->addHandler(setColorHandler);
 
-  AsyncCallbackJsonWebHandler *blinkHandler = new AsyncCallbackJsonWebHandler("/api/v1/blink", [&](AsyncWebServerRequest *request, JsonVariant &json) {
+    if(skip) {
+      led.playWorker(new BlinkWorker(delay, new RGB(red, green, blue)));
+    } else {
+      led.addToQueue(new BlinkWorker(delay, new RGB(red, green, blue)));
+    }
     request->send(200, "application/json", responseOkayJson);
+  });
+  website->addHandler(workerBlinkHandler);
+
+  AsyncCallbackJsonWebHandler *workerFadeToHandler = new AsyncCallbackJsonWebHandler("/api/v1/worker/fade_to", [&](AsyncWebServerRequest *request, JsonVariant &json) {
+    JsonObject data = json.as<JsonObject>();
+    bool skip = data["skip"].as<bool>();
+    unsigned int step = data["step"].as<unsigned int>();
+    unsigned int red = data["red"].as<unsigned int>();
+    unsigned int green = data["green"].as<unsigned int>();
+    unsigned int blue = data["blue"].as<unsigned int>();
+
+    if(skip) {
+      led.playWorker(new FadeToWorker(new RGB(red, green, blue), step));
+    } else {
+      led.addToQueue(new FadeToWorker(new RGB(red, green, blue), step));
+    }
+    request->send(200, "application/json", responseOkayJson);
+  });
+  website->addHandler(workerFadeToHandler);
+
+  AsyncCallbackJsonWebHandler *workerSetColorHandler = new AsyncCallbackJsonWebHandler("/api/v1/worker/set_color", [&](AsyncWebServerRequest *request, JsonVariant &json) {
     JsonObject data = json.as<JsonObject>();
     bool skip = data["skip"].as<bool>();
     unsigned int red = data["red"].as<unsigned int>();
     unsigned int green = data["green"].as<unsigned int>();
     unsigned int blue = data["blue"].as<unsigned int>();
-    bool delay = data["delay"].as<bool>();
-    led.playWorker(new BlinkWorker(delay, new RGB(red, green, blue)), skip);
+
+    if(skip) {
+      led.playWorker(new SetColorWorker(new RGB(red, green, blue)));
+    } else {
+      led.addToQueue(new SetColorWorker(new RGB(red, green, blue)));
+    }
     request->send(200, "application/json", responseOkayJson);
   });
-  website->addHandler(blinkHandler);
+  website->addHandler(workerSetColorHandler);
 };

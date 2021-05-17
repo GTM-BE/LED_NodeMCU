@@ -4,36 +4,42 @@
 #include <map>
 #include "AsyncJson.h"
 #include "ArduinoJson.h"
-
-#include "led/worker/BlinkWorker.h"
-#include "led/worker/FadeToWorker.h"
+#include "led/worker/SetColorWorker.h"
 
 LedControl::LedControl() {}
 
 void LedControl::playWorker(Worker *nextWorker)
 {
-  playWorker(nextWorker, false);
+  this->queue.clear();
+  this->queue.push_back(nextWorker);
 }
 
-void LedControl::playWorker(Worker *nextWorker, bool skip)
-{
-  if (skip)
-  {
-    queue.clear();
-    currentWorker = nextWorker;
-  }
-  else
-  {
-    queue.push_back(nextWorker);
-  }
+void LedControl::addToQueue(Worker *nextWorker) {
+  this->queue.push_back(nextWorker);
+}
+
+void LedControl::skipWorker() {
+  this->currentWorker->status = WorkerStatus::FINISHED_WORKER;
+}
+
+void LedControl::stop() {
+  this->queue.clear();
+  this->currentWorker->status = WorkerStatus::FINISHED_WORKER;
+}
+
+void LedControl::clear() {
+  this->queue.clear();
+  this->playWorker(new SetColorWorker(new RGB(0,0,0)));
 }
 
 void LedControl::tick()
 {
   if (currentWorker->status == WorkerStatus::FINISHED_WORKER)
   {
-    currentWorker = queue.front() ? queue.front() : new Worker();
-    queue.pop_front();
+    if(queue.front()) {
+      currentWorker = queue.front();
+      queue.pop_front();
+    }
   }
   currentWorker->tick();
 }
