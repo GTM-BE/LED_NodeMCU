@@ -46,7 +46,7 @@ void loop()
     Serial.println(data);
 
     // send data
-    String URL = "http://" + RasbpiAddress.toString() + "/api/v1/ak_slave";
+    String URL = "http://" + RasbpiAddress.toString() + "/api/v1/ping";
     httpClient.begin(wifiClient, URL);
     httpClient.addHeader("Content-Type", "application/json");
     httpClient.POST(data);
