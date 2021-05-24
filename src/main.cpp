@@ -5,7 +5,8 @@
 #include <IPAddress.h>
 #include "config.h"
 
-IPAddress RasbpiAddress(192, 168, 178, 10);
+// IPAddress RasbpiAddress(192, 168, 178, 10);
+IPAddress RasbpiAddress(192, 168, 178, 76);
 IPAddress gateway(192, 168, 178, 1);
 IPAddress subnet(192, 168, 178, 254);
 
@@ -30,9 +31,7 @@ void loop()
 {
   /*---------- Loop for client aknowlage and led worker tick ----------*/
   //led.tick();
-  delay(1);
-
-  if (lastAK + 30000 < millis())
+  if (lastAK + 3e4 < millis())
   {
     lastAK = millis();
 
@@ -46,7 +45,7 @@ void loop()
     Serial.println(data);
 
     // send data
-    String URL = "http://" + RasbpiAddress.toString() + "/api/v1/ping";
+    String URL = "http://" + RasbpiAddress.toString() + ":8888/api/v1/mcu/ping";
     httpClient.begin(wifiClient, URL);
     httpClient.addHeader("Content-Type", "application/json");
     httpClient.POST(data);
