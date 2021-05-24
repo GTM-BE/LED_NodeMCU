@@ -35,7 +35,6 @@ void WebServer::registerEndpoints(AsyncWebServer *website)
     statusJson["status"] = "okay";
     statusJson["memory"] = system_get_free_heap_size();
     statusJson["maxMemory"] = 81920;
-    statusJson["rst"] = system_get_rst_info();
     statusJson["adc"] = system_adc_read();
     statusJson["ip"] = WiFi.localIP().toString();
 
