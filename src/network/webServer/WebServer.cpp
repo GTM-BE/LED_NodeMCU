@@ -32,13 +32,17 @@ void WebServer::registerEndpoints(AsyncWebServer *website)
   /*---------- API endpoints ----------*/
   website->on("/api/v1/system_status", HTTP_GET, [&](AsyncWebServerRequest *request) {
     DynamicJsonDocument statusJson(254);
+    DynamicJsonDocument colorJson(64);
     statusJson["status"] = "okay";
     statusJson["memory"] = system_get_free_heap_size();
     statusJson["maxMemory"] = 81920;
     statusJson["adc"] = system_adc_read();
     statusJson["ip"] = WiFi.localIP().toString();
 
-    system_get_os_print();
+    colorJson["red"] = LedControl::getColor()->red;
+    colorJson["green"] = LedControl::getColor()->green;
+    colorJson["blue"] = LedControl::getColor()->blue;
+    statusJson["color"] = colorJson;
 
     String statusResponse;
     serializeJson(statusJson, statusResponse);

@@ -6,6 +6,13 @@
 #include "ArduinoJson.h"
 #include "led/worker/SetColorWorker.h"
 
+RGB::RGB(unsigned int _red, unsigned int _green, unsigned int _blue)
+{
+  red = _red;
+  green = _green;
+  blue = _blue;
+};
+
 LedControl::LedControl() {}
 
 void LedControl::playWorker(Worker *nextWorker)
@@ -51,6 +58,11 @@ void LedControl::setColor(unsigned int red, unsigned int green, unsigned int blu
   analogWrite(LED_BLUE, blue % 1023);
 }
 
+RGB * LedControl::getColor()
+{
+  return new RGB(analogRead(LED_RED),analogRead(LED_GREEN),analogRead(LED_BLUE));
+}
+
 void LedControl::initLEDs()
 {
   pinMode(LED_RED, OUTPUT);   //LED pin as output
@@ -58,10 +70,3 @@ void LedControl::initLEDs()
   pinMode(LED_BLUE, OUTPUT);  //LED pin as output
   setColor(LOW, LOW, LOW);
 }
-
-RGB::RGB(unsigned int _red, unsigned int _green, unsigned int _blue)
-{
-  red = _red;
-  green = _green;
-  blue = _blue;
-};

@@ -28,6 +28,7 @@ public:
   static void initLEDs();
   static void setColor(unsigned int red, unsigned int green, unsigned int blue);
   static void setColor(RGB colors);
+  static RGB * getColor();
 
   void playWorker(Worker *nextWorker);
   void addToQueue(Worker *nextWorker);
