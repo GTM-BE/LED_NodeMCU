@@ -3,44 +3,48 @@
 #include "led/LedControl.h"
 #include "led/Worker.h"
 #include "config.h"
+#include "led/RGB.h"
 
 FadeToWorker::FadeToWorker(RGB *color) : Worker(WorkerID::FADE_TO_WORKER)
 {
-  fadeColor = color;
+  this->fadeColor = color;
 }
 
 FadeToWorker::FadeToWorker(RGB *color, unsigned int step) : Worker(WorkerID::FADE_TO_WORKER)
 {
-  fadeColor = color;
-  fadeStep = step;
+  this->fadeColor = color;
+  this->fadeStep = step;
+}
+
+void FadeToWorker::onPrepare()
+{
+  this->initColor = LedControl::getColor();
 }
 
 void FadeToWorker::onTick()
 {
-  fadeChannel(LED_RED, fadeColor->red);
-  fadeChannel(LED_GREEN, fadeColor->green);
-  fadeChannel(LED_BLUE, fadeColor->blue);
+  this->currentColor->red = fadeChannel(LED_RED, fadeColor->red, currentColor->red, initColor->red);
+  this->currentColor->green = fadeChannel(LED_GREEN, fadeColor->green, currentColor->green, initColor->green);
+  this->currentColor->blue = fadeChannel(LED_BLUE, fadeColor->blue, currentColor->blue, initColor->blue);
+
+  if (this->currentColor->red == this->fadeColor->red &&
+      this->currentColor->green == this->fadeColor->green &&
+      this->currentColor->blue == this->fadeColor->blue)
+    this->status = WorkerStatus::FINISHED_WORKER;
 }
 
-void FadeToWorker::fadeChannel(uint8_t channel, signed int targetBrightness)
+unsigned int FadeToWorker::fadeChannel(uint8_t channel,
+                                       unsigned int targetColor,
+                                       unsigned int currentColor,
+                                       unsigned int initColor)
 {
-  int brightness;
-  if (analogRead(channel) < targetBrightness)
+  if (std::abs((int)targetColor - (int)currentColor) < this->fadeStep)
   {
-    brightness = analogRead(channel) + fadeStep;
-    if (brightness > targetBrightness)
-    {
-      brightness = 1024;
-    }
-    analogWrite(channel, brightness);
+    analogWrite(channel, targetColor);
+    return targetColor;
   }
-  else
-  {
-    brightness = analogRead(channel) - fadeStep;
-    if (brightness < targetBrightness)
-    {
-      brightness = 0;
-    }
-    analogWrite(channel, brightness);
-  }
+  int step = currentColor < targetColor ? this->fadeStep : this->fadeStep * -1;
+  unsigned int newVal = currentColor + step;
+  analogWrite(channel, newVal);
+  return newVal;
 }

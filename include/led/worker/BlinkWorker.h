@@ -3,6 +3,7 @@
 
 #include "led/Worker.h"
 #include "led/LedControl.h"
+#include "led/RGB.h"
 
 class BlinkWorker : public Worker
 {

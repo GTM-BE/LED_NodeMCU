@@ -5,15 +5,12 @@
 #include "AsyncJson.h"
 #include "ArduinoJson.h"
 #include "led/worker/SetColorWorker.h"
+#include "led/RGB.h"
 
-RGB::RGB(unsigned int _red, unsigned int _green, unsigned int _blue)
+LedControl::LedControl()
 {
-  red = _red;
-  green = _green;
-  blue = _blue;
-};
-
-LedControl::LedControl() {}
+  this->currentWorker = new Worker();
+}
 
 void LedControl::playWorker(Worker *nextWorker)
 {
@@ -21,46 +18,62 @@ void LedControl::playWorker(Worker *nextWorker)
   this->queue.push_back(nextWorker);
 }
 
-void LedControl::addToQueue(Worker *nextWorker) {
+void LedControl::addToQueue(Worker *nextWorker)
+{
   this->queue.push_back(nextWorker);
 }
 
-void LedControl::skipWorker() {
+int LedControl::getQueueLength()
+{
+  return this->queue.size();
+}
+
+void LedControl::skipWorker()
+{
   this->currentWorker->status = WorkerStatus::FINISHED_WORKER;
 }
 
-void LedControl::stop() {
+void LedControl::stop()
+{
   this->queue.clear();
   this->currentWorker->status = WorkerStatus::FINISHED_WORKER;
 }
 
-void LedControl::clear() {
+void LedControl::clear()
+{
   this->queue.clear();
-  this->playWorker(new SetColorWorker(new RGB(0,0,0)));
+  this->playWorker(new SetColorWorker(new RGB(0, 0, 0)));
 }
 
 void LedControl::tick()
 {
   if (currentWorker->status == WorkerStatus::FINISHED_WORKER)
   {
-    if(queue.front()) {
+    Serial.printf("Queue size: %d\n", queue.size());
+    if (queue.size() != 0)
+    {
+      this->currentColor = new RGB(currentWorker->currentColor->red, currentWorker->currentColor->green, currentWorker->currentColor->blue);
       currentWorker = queue.front();
+      currentWorker->prepare(this->currentColor);
       queue.pop_front();
     }
   }
-  currentWorker->tick();
+  else
+  {
+    currentWorker->tick();
+  }
 }
 
 void LedControl::setColor(unsigned int red, unsigned int green, unsigned int blue)
 {
-  analogWrite(LED_RED, red % 1023);
-  analogWrite(LED_GREEN, green % 1023);
-  analogWrite(LED_BLUE, blue % 1023);
+  analogWrite(LED_RED, red % 1024);
+  analogWrite(LED_GREEN, green % 1024);
+  analogWrite(LED_BLUE, blue % 1024);
 }
 
-RGB * LedControl::getColor()
+RGB *LedControl::getColor()
 {
-  return new RGB(analogRead(LED_RED),analogRead(LED_GREEN),analogRead(LED_BLUE));
+  return new RGB(analogRead(LED_RED), analogRead(LED_GREEN), analogRead(LED_BLUE));
 }
 
 void LedControl::initLEDs()

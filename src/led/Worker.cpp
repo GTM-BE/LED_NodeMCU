@@ -1,13 +1,16 @@
 #include <Arduino.h>
+#include "led/LedControl.h"
 #include "led/Worker.h"
 #include "AsyncJson.h"
 #include "ArduinoJson.h"
 
-Worker::Worker() {}
+Worker::Worker()
+{
+}
 
 Worker::Worker(WorkerID workerID)
 {
-  id = workerID;
+  this->id = workerID;
 }
 
 void Worker::tick()
@@ -17,10 +20,22 @@ void Worker::tick()
     status = WorkerStatus::RUNNING_WORKER;
   }
   lastTick = millis();
-  onTick();
+  this->onTick();
+}
+
+void Worker::prepare(RGB *color)
+{
+  this->currentColor = color;
+  this->onPrepare();
 }
 
 void Worker::onTick()
 {
-  //Serial.println("onTick Function not implemented");
+  this->status = WorkerStatus::FINISHED_WORKER;
+  Serial.println("onTick Function not implemented");
+}
+
+void Worker::onPrepare()
+{
+  Serial.println("Prepare Function not implemented");
 }

@@ -2,6 +2,7 @@
 #define WORKER_H_
 
 #include <map>
+#include "RGB.h"
 
 enum WorkerStatus
 {
@@ -24,12 +25,15 @@ public:
   WorkerID id = WorkerID::INVALID_WORKER;
   WorkerStatus status = WorkerStatus::READY_WORKER;
   unsigned long lastTick = 0;
+  RGB *currentColor = new RGB(0, 0, 0);
 
 public:
   Worker();
   Worker(WorkerID workerID);
   void tick();
   virtual void onTick();
+  void prepare(RGB *color);
+  virtual void onPrepare();
 };
 
 #endif

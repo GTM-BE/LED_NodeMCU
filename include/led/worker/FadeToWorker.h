@@ -3,18 +3,24 @@
 
 #include "led/Worker.h"
 #include "led/LedControl.h"
+#include "led/RGB.h"
 
 class FadeToWorker : public Worker
 {
 public:
   RGB *fadeColor;
-  unsigned int fadeStep;
+  RGB *initColor;
+  unsigned int fadeStep = 1;
 
 public:
   FadeToWorker(RGB *color);
   FadeToWorker(RGB *color, unsigned int step);
   void onTick() override;
-  void fadeChannel(uint8_t channel, signed int brightness);
+  void onPrepare() override;
+  unsigned int fadeChannel(uint8_t channel,
+                           unsigned int targetColor,
+                           unsigned int currentColor,
+                           unsigned int initColor);
 };
 
 #endif

@@ -2,6 +2,7 @@
 #include "led/worker/BlinkWorker.h"
 #include "led/LedControl.h"
 #include "config.h"
+#include "led/RGB.h"
 
 BlinkWorker::BlinkWorker(unsigned int _onDelay, unsigned int _offDelay, RGB *_color) : Worker(WorkerID::BLINK_WORKER)
 {
@@ -21,11 +22,17 @@ void BlinkWorker::onTick()
   if (analogRead(LED_RED) > 0)
   {
     if ((millis() + offDelay) < millis())
+    {
       LedControl::setColor(color->red, color->green, color->blue);
+      this->currentColor = new RGB(color->red, color->green, color->blue);
+    }
   }
   else
   {
     if ((millis() + onDelay) < millis())
+    {
       LedControl::setColor(LOW, LOW, LOW);
+      this->currentColor = new RGB(0, 0, 0);
+    }
   }
 };

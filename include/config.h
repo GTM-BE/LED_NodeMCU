@@ -12,6 +12,9 @@ extern LedControl led;
 extern WiFiClient wifiClient;
 extern HTTPClient httpClient;
 
+// general
+#define testMode 1
+
 // LED
 #define LED_RED D1
 #define LED_GREEN D2
@@ -26,5 +29,6 @@ extern HTTPClient httpClient;
 #define AP_PASSWORD "1234567890"
 
 // Serial console
+#define enableSerial 0
 #define BAUD_RATE 9200
 #endif

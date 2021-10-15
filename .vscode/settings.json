@@ -41,5 +41,6 @@
     "ctime": "cpp",
     "string": "cpp",
     "map": "cpp"
-  }
+  },
+  "C_Cpp.errorSquiggles": "Disabled"
 }
